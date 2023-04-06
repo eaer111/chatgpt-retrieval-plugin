@@ -21,6 +21,7 @@ from services.file import get_document_from_file
 
 app = FastAPI()
 app.mount("/.well-known", StaticFiles(directory=".well-known"), name="static")
+app.mount("/.test-html", StaticFiles(directory=".test-html"), name="static")
 
 # Create a sub-application, in order to access just the query endpoints in the OpenAPI schema, found at http://0.0.0.0:8000/sub/openapi.json when the app is running locally
 sub_app = FastAPI(

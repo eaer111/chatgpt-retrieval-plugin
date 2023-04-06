@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>搜索页面</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<style>
+		body {
+			font-family: Arial, Helvetica, sans-serif;
+			background-color: #f2f2f2;
+			margin: 0;
+			padding: 0;
+		}
+		h1 {
+			text-align: center;
+			margin-top: 50px;
+		}
+		form {
+			margin: 50px auto;
+			width: 80%;
+			max-width: 800px;
+			background-color: white;
+			padding: 20px;
+			box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+			border-radius: 10px;
+		}
+		label {
+			display: block;
+			margin-bottom: 10px;
+			font-weight: bold;
+		}
+		input[type="text"], select {
+			width: 100%;
+			padding: 12px 20px;
+			margin: 8px 0;
+			box-sizing: border-box;
+			border: 2px solid #ccc;
+			border-radius: 4px;
+			background-color: #f8f8f8;
+		}
+		input[type="submit"] {
+			background-color: #4CAF50;
+			color: white;
+			padding: 12px 20px;
+			border: none;
+			border-radius: 4px;
+			cursor: pointer;
+			float: right;
+		}
+		input[type="submit"]:hover {
+			background-color: #45a049;
+		}
+		.results {
+			margin-top: 50px;
+			width: 80%;
+			max-width: 800px;
+			background-color: white;
+			padding: 20px;
+			box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+			border-radius: 10px;
+			display: none;
+		}
+		.results h2 {
+			text-align: center;
+			margin-bottom: 20px;
+		}
+		.result {
+			margin-bottom: 20px;
+			padding: 10px;
+			border: 1px solid #ccc;
+			border-radius: 4px;
+		}
+		.result h3 {
+			margin-top: 0;
+		}
+		.result p {
+			margin-bottom: 10px;
+		}
+	</style>
+</head>
+<body>
+	<h1>搜索页面</h1>
+	<form id="search-form">
+		<label for="query">查询词：</label>
+		<input type="text" id="query" name="query" required>
+		<input type="radio" id="item-list" name="query-type" value="item-list" checked> 列表 <br>
+		<input type="radio" id="analysis" name="query-type" value="analysis" > 分析 <br>
+		<input type="submit" value="搜索">
+	</form>
+	<div id="results" class="results">
+		<h2>搜索结果</h2>
+	</div>
+	<script>
+		const form = document.getElementById('search-form');
+		const resultsDiv = document.getElementById('results');
+		form.addEventListener('submit', async (event) => {
+			event.preventDefault();
+			const query = document.getElementById('query').value;
+			const queryType = getSelectedOption("query-type")
+			const data = {
+				"queries": [
+					{
+						"query": query,
+						"top_k": 3
+					}
+				]
+			};
+			if(queryType == 'item-list'){
+				const response = await fetch('http://localhost:8000/query', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(data)
+				});
+				if (response.ok) {
+					const results = await response.json();
+					displayResults(results);
+				} else {
+					alert('搜索失败');
+				}
+			}
+		});
+
+		function getSelectedOption(optionName) {
+		  var options = document.getElementsByName(optionName);
+		  for (var i = 0; i < options.length; i++) {
+			if (options[i].checked) {
+			  console.log("Selected Option: " + options[i].value);
+			}
+		  }
+		}
+
+		function displayResults(results) {
+			resultsDiv.innerHTML = '<h2>搜索结果</h2>';
+			for (const result of results.results) {
+				const query = result.query;
+				const resultDiv = document.createElement('div');
+				resultDiv.classList.add('result');
+				const heading = document.createElement('h3');
+				heading.textContent = `查询词：${query}`;
+				resultDiv.appendChild(heading);
+				const resultList = document.createElement('ul');
+				for (const item of result.results) {
+					const listItem = document.createElement('li');
+					const text = document.createElement('p');
+					text.textContent = item.text;
+					listItem.appendChild(text);
+					const metadata = document.createElement('p');
+					metadata.textContent = `来源：${item.metadata.source}，作者：${item.metadata.author}，日期：${item.metadata.created_at}`;
+					listItem.appendChild(metadata);
+					resultList.appendChild(listItem);
+				}
+				resultDiv.appendChild(resultList);
+				resultsDiv.appendChild(resultDiv);
+			}
+			resultsDiv.style.display = 'block';
+		}
+	</script>
+</body>
+</html>
