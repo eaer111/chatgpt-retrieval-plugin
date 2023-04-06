@@ -1,6 +1,3 @@
-# This is a version of the main.py file found in ../../../server/main.py without authentication.
-# Copy and paste this into the main file at ../../../server/main.py if you choose to use no authentication for your retrieval plugin.
-
 import os
 import uvicorn
 from fastapi import FastAPI, File, HTTPException, Depends, Body, UploadFile
@@ -13,7 +10,7 @@ from models.api import (
     QueryRequest,
     QueryResponse,
     UpsertRequest,
-    UpsertResponse,
+    UpsertResponse, AnalysisResponse, AnalysisRequest,
 )
 from datastore.factory import get_datastore
 from services.file import get_document_from_file
@@ -132,3 +129,33 @@ async def startup():
 
 def start():
     uvicorn.run("server.main:app", host="0.0.0.0", port=8000, reload=True)
+
+
+
+# 新增demo用接口
+from services.openai import get_chat_completion
+@app.post(
+    "/analysis",
+    response_model=AnalysisResponse,
+)
+async def analysis_main(
+    request: AnalysisRequest = Body(...),
+):
+    try:
+        messages = [
+            {
+                "role": "system",
+                "content": f"""
+                    You can only respond with declarative sentences, where your answer indicates the response to the user's question based on the returned JSON. 
+                    Your task is to extract information from the returned json to answer the question. 
+                    Here is the specific returned JSON:
+                    {request.query_results}
+                    """,
+            },
+            {"role": "user", "content": request.analysis_query}
+        ]
+        completion = get_chat_completion(messages=messages)
+        return AnalysisResponse(analysis_results=completion)
+    except Exception as e:
+        print("Error:", e)
+        raise HTTPException(status_code=500, detail="Internal Service Error")

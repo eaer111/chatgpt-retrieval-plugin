@@ -51,7 +51,7 @@
 			background-color: #45a049;
 		}
 		.results {
-			margin-top: 50px;
+			margin: 50px auto;
 			width: 80%;
 			max-width: 800px;
 			background-color: white;
@@ -81,22 +81,51 @@
 <body>
 	<h1>搜索页面</h1>
 	<form id="search-form">
-		<label for="query">查询词：</label>
+		<label for="query">搜索词：</label>
 		<input type="text" id="query" name="query" required>
 		<input type="radio" id="item-list" name="query-type" value="item-list" checked> 列表 <br>
 		<input type="radio" id="analysis" name="query-type" value="analysis" > 分析 <br>
+		<div id="analysis-input-container"></div>
 		<input type="submit" value="搜索">
 	</form>
 	<div id="results" class="results">
 		<h2>搜索结果</h2>
 	</div>
+	<div id="results2" class="results">
+		<h2>分析结果</h2>
+	</div>
 	<script>
 		const form = document.getElementById('search-form');
 		const resultsDiv = document.getElementById('results');
+		const results2Div = document.getElementById('results2');
+		const listRadio = document.getElementById('item-list');
+		const analysisRadio = document.getElementById('analysis');
+		const analysisInputContainer = document.getElementById('analysis-input-container');
+		analysisRadio.addEventListener('change',() => {
+			if(analysisRadio.checked){
+				const inputHtml = `
+					<br>
+					<label for="text-input">
+					  分析内容:
+					  <input type="text" id="analysis-text-input" name="text-input">
+					</label>
+				 `;
+				 analysisInputContainer.innerHTML = inputHtml;
+			} else{
+				analysisInputContainer.innerHTML = '';
+			}
+		});
+		listRadio.addEventListener('change',() => {
+			if(listRadio.checked){
+				analysisInputContainer.innerHTML = '';
+			}
+		});
 		form.addEventListener('submit', async (event) => {
 			event.preventDefault();
+			resultsDiv.innerHTML = '<h2>搜索中...</h2>';
+			resultsDiv.style.display = 'block';
 			const query = document.getElementById('query').value;
-			const queryType = getSelectedOption("query-type")
+			const queryType = getSelectedOption('query-type');
 			const data = {
 				"queries": [
 					{
@@ -105,20 +134,41 @@
 					}
 				]
 			};
-			if(queryType == 'item-list'){
-				const response = await fetch('http://localhost:8000/query', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify(data)
-				});
-				if (response.ok) {
-					const results = await response.json();
-					displayResults(results);
-				} else {
-					alert('搜索失败');
+			const response = await fetch('http://localhost:8000/query', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(data)
+			});
+			if (response.ok) {
+				const results = await response.json();
+				displayResults(results);
+
+				if(queryType == 'analysis'){
+					results2Div.innerHTML = '<h2>分析中...</h2>';
+					results2Div.style.display = 'block';
+					const analysisQuery = document.getElementById('analysis-text-input').value;
+					const analysisData = {
+						"query_results" :results.results,
+						"analysis_query":analysisQuery
+					};
+					const analysisResponse = await fetch('http://localhost:8000/analysis', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify(analysisData)
+					});
+					if (analysisResponse.ok) {
+						const analysisResults = await analysisResponse.json();
+						displayResults2(analysisResults)
+					} else {
+						alert('分析失败');
+					}
 				}
+			} else {
+				alert('搜索失败');
 			}
 		});
 
@@ -126,9 +176,10 @@
 		  var options = document.getElementsByName(optionName);
 		  for (var i = 0; i < options.length; i++) {
 			if (options[i].checked) {
-			  console.log("Selected Option: " + options[i].value);
+			  return options[i].value
 			}
 		  }
+		  return null;
 		}
 
 		function displayResults(results) {
@@ -138,7 +189,7 @@
 				const resultDiv = document.createElement('div');
 				resultDiv.classList.add('result');
 				const heading = document.createElement('h3');
-				heading.textContent = `查询词：${query}`;
+				heading.textContent = `搜索词：${query}`;
 				resultDiv.appendChild(heading);
 				const resultList = document.createElement('ul');
 				for (const item of result.results) {
@@ -155,6 +206,14 @@
 				resultsDiv.appendChild(resultDiv);
 			}
 			resultsDiv.style.display = 'block';
+		}
+
+		function displayResults2(results) {
+			results2Div.innerHTML = '<h2>分析结果</h2>';
+			const text = document.createElement('p');
+			text.textContent = results.analysis_results;
+			results2Div.appendChild(text)
+			results2Div.style.display = 'block';
 		}
 	</script>
 </body>

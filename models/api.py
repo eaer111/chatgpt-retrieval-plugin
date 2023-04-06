@@ -33,3 +33,13 @@ class DeleteRequest(BaseModel):
 
 class DeleteResponse(BaseModel):
     success: bool
+
+
+# 新增demo用api
+class AnalysisRequest(BaseModel):
+    query_results: List[QueryResult]
+    analysis_query: str
+
+
+class AnalysisResponse(BaseModel):
+    analysis_results: str
