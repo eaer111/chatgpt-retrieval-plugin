@@ -83,12 +83,18 @@
 	<form id="search-form">
 		<label for="query">搜索词：</label>
 		<input type="text" id="query" name="query" required>
-		<input type="radio" id="item-list" name="query-type" value="item-list" checked> 列表 <br>
+		<input type="radio" id="item-list" name="query-type" value="item-list" checked> 列表
 		<input type="radio" id="analysis" name="query-type" value="analysis" > 分析 <br>
+		<input type="radio" id="inner" name="search-type" value="inner" checked> 内部搜索
+		<input type="radio" id="outer" name="search-type" value="outer" > 外部搜索
+		<input type="radio" id="mix" name="search-type" value="mix" > 混合搜索 <br>
 		<div id="analysis-input-container"></div>
 		<input type="submit" value="搜索">
 	</form>
 	<div id="results" class="results">
+		<h2>搜索结果</h2>
+	</div>
+	<div id="search_results" class="results">
 		<h2>搜索结果</h2>
 	</div>
 	<div id="results2" class="results">
@@ -98,8 +104,11 @@
 		const form = document.getElementById('search-form');
 		const resultsDiv = document.getElementById('results');
 		const results2Div = document.getElementById('results2');
+		const searchResultsDiv = document.getElementById('search_results');
 		const listRadio = document.getElementById('item-list');
 		const analysisRadio = document.getElementById('analysis');
+		const innerRadio = document.getElementById('inner');
+		const outerRadio = document.getElementById('outer');
 		const analysisInputContainer = document.getElementById('analysis-input-container');
 		analysisRadio.addEventListener('change',() => {
 			if(analysisRadio.checked){
@@ -111,6 +120,7 @@
 					</label>
 				 `;
 				 analysisInputContainer.innerHTML = inputHtml;
+				 results2Div.style.display = 'none';
 			} else{
 				analysisInputContainer.innerHTML = '';
 			}
@@ -118,57 +128,98 @@
 		listRadio.addEventListener('change',() => {
 			if(listRadio.checked){
 				analysisInputContainer.innerHTML = '';
+				results2Div.style.display = 'none';
 			}
 		});
+		innerRadio.addEventListener('change',() => {
+			if(innerRadio.checked){
+				searchResultsDiv.style.display = 'none';
+				results2Div.style.display = 'none';
+			}
+		});
+		outerRadio.addEventListener('change',() => {
+			if(outerRadio.checked){
+				resultsDiv.style.display = 'none';
+				results2Div.style.display = 'none';
+			}
+		});
+
 		form.addEventListener('submit', async (event) => {
 			event.preventDefault();
-			resultsDiv.innerHTML = '<h2>搜索中...</h2>';
-			resultsDiv.style.display = 'block';
-			const query = document.getElementById('query').value;
 			const queryType = getSelectedOption('query-type');
-			const data = {
-				"queries": [
-					{
-						"query": query,
-						"top_k": 3
-					}
-				]
-			};
-			const response = await fetch('http://192.168.215.141:8000/query', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(data)
-			});
-			if (response.ok) {
-				const results = await response.json();
-				displayResults(results);
-
-				if(queryType == 'analysis'){
-					results2Div.innerHTML = '<h2>分析中...</h2>';
-					results2Div.style.display = 'block';
-					const analysisQuery = document.getElementById('analysis-text-input').value;
-					const analysisData = {
-						"query_results" :results.results,
-						"analysis_query":analysisQuery
-					};
-					const analysisResponse = await fetch('http://192.168.215.141:8000/analysis', {
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json'
-						},
-						body: JSON.stringify(analysisData)
-					});
-					if (analysisResponse.ok) {
-						const analysisResults = await analysisResponse.json();
-						displayResults2(analysisResults)
-					} else {
-						alert('分析失败');
-					}
+			const searchType = getSelectedOption('search-type');
+			const query = document.getElementById('query').value;
+			var response_inner;
+			var response_outer;
+			var analysis_content_list = [];
+			if(searchType == "inner" || searchType == "mix"){
+				resultsDiv.innerHTML = '<h2>内部搜索中...</h2>';
+				resultsDiv.style.display = 'block';
+				const data = {
+					"queries": [
+						{
+							"query": query,
+							"top_k": 3
+						}
+					]
+				};
+				response_inner = await fetch('http://192.168.215.141:8000/query', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(data)
+				});
+				if (response_inner.ok) {
+					const results_inner = await response_inner.json();
+					displayResults(results_inner,analysis_content_list);
+				} else {
+					alert('内部搜索失败');
 				}
-			} else {
-				alert('搜索失败');
+			}
+
+			if (searchType == "outer" || searchType == "mix"){
+				searchResultsDiv.innerHTML = '<h2>外部搜索中...</h2>';
+				searchResultsDiv.style.display = 'block';
+				const data = {
+					"search_query": query
+				}
+				response_outer = await fetch('http://192.168.215.141:8000/search', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(data)
+				});
+				if (response_outer && response_outer.ok) {
+					const results_outer = await response_outer.json();
+					displaySearchResults(results_outer,analysis_content_list);
+				} else {
+					alert('外部搜索失败');
+				}
+			}
+
+			if(queryType == 'analysis'){
+				results2Div.innerHTML = '<h2>分析中...</h2>';
+				results2Div.style.display = 'block';
+				const analysisQuery = document.getElementById('analysis-text-input').value;
+				const analysisData = {
+					"query_results" :analysis_content_list,
+					"analysis_query":analysisQuery
+				};
+				const analysisResponse = await fetch('http://192.168.215.141:8000/analysis', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(analysisData)
+				});
+				if (analysisResponse.ok) {
+					const analysisResults = await analysisResponse.json();
+					displayResults2(analysisResults)
+				} else {
+					alert('分析失败');
+				}
 			}
 		});
 
@@ -182,8 +233,8 @@
 		  return null;
 		}
 
-		function displayResults(results) {
-			resultsDiv.innerHTML = '<h2>搜索结果</h2>';
+		function displayResults(results,analysis_content_list) {
+			resultsDiv.innerHTML = '<h2>内部搜索结果</h2>';
 			for (const result of results.results) {
 				const query = result.query;
 				const resultDiv = document.createElement('div');
@@ -201,6 +252,7 @@
 					metadata.textContent = `来源：${item.metadata.source}，作者：${item.metadata.author}，日期：${item.metadata.created_at}`;
 					listItem.appendChild(metadata);
 					resultList.appendChild(listItem);
+					analysis_content_list.push(item.text);
 				}
 				resultDiv.appendChild(resultList);
 				resultsDiv.appendChild(resultDiv);
@@ -215,6 +267,29 @@
 			results2Div.appendChild(text)
 			results2Div.style.display = 'block';
 		}
+
+		function displaySearchResults(results,analysis_content_list) {
+			searchResultsDiv.innerHTML = '<h2>外部搜索结果</h2>';
+			const query = results.query;
+			const resultDiv = document.createElement('div');
+			resultDiv.classList.add('result');
+			const heading = document.createElement('h3');
+			heading.textContent = `搜索词：${query}`;
+			resultDiv.appendChild(heading);
+			const resultList = document.createElement('ul');
+			for (const item of results.results) {
+				const listItem = document.createElement('li');
+				const text = document.createElement('p');
+				text.textContent = item;
+				listItem.appendChild(text);
+				resultList.appendChild(listItem);
+				analysis_content_list.push(item.toString());
+			}
+			resultDiv.appendChild(resultList);
+			searchResultsDiv.appendChild(resultDiv);
+			searchResultsDiv.style.display = 'block';
+		}
+
 	</script>
 </body>
 </html>

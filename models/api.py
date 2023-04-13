@@ -37,9 +37,18 @@ class DeleteResponse(BaseModel):
 
 # 新增demo用api
 class AnalysisRequest(BaseModel):
-    query_results: List[QueryResult]
+    query_results: List[str]
     analysis_query: str
 
 
 class AnalysisResponse(BaseModel):
     analysis_results: str
+
+
+class SearchRequest(BaseModel):
+    search_query: str
+
+
+class SearchResponse(BaseModel):
+    query: str
+    results: List[str]
