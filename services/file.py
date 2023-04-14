@@ -7,6 +7,7 @@ from PyPDF2 import PdfReader
 import docx2txt
 import csv
 import pptx
+import datetime
 
 from models.models import Document, DocumentMetadata, Source
 
@@ -15,6 +16,7 @@ async def get_document_from_file(file: UploadFile) -> Document:
     extracted_text = await extract_text_from_form_file(file)
     metadata = DocumentMetadata(
         source=Source.file,
+        created_at=datetime.datetime.now(),
     )
     doc = Document(text=extracted_text, metadata=metadata)
 

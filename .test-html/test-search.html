@@ -101,6 +101,7 @@
 		<h2>分析结果</h2>
 	</div>
 	<script>
+		const url_base = 'localhost';
 		const form = document.getElementById('search-form');
 		const resultsDiv = document.getElementById('results');
 		const results2Div = document.getElementById('results2');
@@ -163,7 +164,7 @@
 						}
 					]
 				};
-				response_inner = await fetch('http://192.168.215.141:8000/query', {
+				response_inner = await fetch('http://'+url_base+':8000/query', {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json'
@@ -184,7 +185,7 @@
 				const data = {
 					"search_query": query
 				}
-				response_outer = await fetch('http://192.168.215.141:8000/search', {
+				response_outer = await fetch('http://'+url_base+':8000/search', {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json'
@@ -199,7 +200,7 @@
 				}
 			}
 
-			if(queryType == 'analysis'){
+			if(queryType == 'analysis' && (response_inner && response_inner.ok || response_outer && response_outer.ok)){
 				results2Div.innerHTML = '<h2>分析中...</h2>';
 				results2Div.style.display = 'block';
 				const analysisQuery = document.getElementById('analysis-text-input').value;
@@ -207,7 +208,7 @@
 					"query_results" :analysis_content_list,
 					"analysis_query":analysisQuery
 				};
-				const analysisResponse = await fetch('http://192.168.215.141:8000/analysis', {
+				const analysisResponse = await fetch('http://'+url_base+':8000/analysis', {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json'

@@ -159,16 +159,20 @@ async def analysis_main(
         raise HTTPException(status_code=500, detail="Internal Service Error")
 
 
+from googlesearch import search
+
+
 @app.post(
     "/search",
     response_model=SearchResponse,
 )
-async def analysis_main(
+async def search_main(
         request: SearchRequest = Body(...),
 ):
     try:
-        from googlesearch import search
-        return SearchResponse(query = request.search_query,results=[item.description for item in search(request.search_query, num_results=3, advanced=True)])
+        return SearchResponse(query=request.search_query, results=[item.description for item in
+                                                                   search(request.search_query, num_results=3,
+                                                                          advanced=True)])
     except Exception as e:
         print("Error:", e)
         raise HTTPException(status_code=500, detail="Internal Service Error")

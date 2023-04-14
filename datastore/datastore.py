@@ -10,7 +10,7 @@ from models.models import (
     QueryResult,
     QueryWithEmbedding,
 )
-from services.chunks import get_document_chunks
+from services.chunks_new import get_document_chunks
 from services.openai import get_embeddings
 
 
@@ -38,6 +38,7 @@ class DataStore(ABC):
         )
 
         chunks = get_document_chunks(documents, chunk_token_size)
+
 
         return await self._upsert(chunks)
 
