@@ -33,6 +33,7 @@ FROM python:3.10
 # 设置环境变量
 ENV DATASTORE=redis
 ENV OPENAI_API_KEY=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
+ENV URL_BASE=${URL_BASE}
 
 WORKDIR /code
 
@@ -41,6 +42,10 @@ COPY --from=redis-stage /usr/bin/redis* /usr/bin/
 COPY --from=redis-stage /data/ /data/
 
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+
+# 修改js中的url_base变量
+RUN yum update -y && yum install -y sed
+RUN sed -i 's/url_base="localhost"/url_base="${URL_BASE:-localhost}"/' ./.test-html/test-search.html
 
 COPY . /code/
 
