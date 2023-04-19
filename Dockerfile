@@ -45,7 +45,7 @@ RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
 # 修改js中的url_base变量
 RUN yum update -y && yum install -y sed
-RUN sed -i 's/url_base="localhost"/url_base="${URL_BASE:-localhost}"/' ./.test-html/test-search.html
+RUN sed -i 's/url_base="localhost:8000"/url_base="${URL_BASE}"/' ./.test-html/test-search.html
 
 COPY . /code/
 
