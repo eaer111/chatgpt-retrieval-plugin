@@ -16,7 +16,7 @@ VOLUME /data
 
 HEALTHCHECK CMD redis-cli -h localhost -p 6379 ping
 
-RUN ls -la /usr/local/bin/
+RUN which redis-server && which redis-cli
 
 FROM python:3.10
 
