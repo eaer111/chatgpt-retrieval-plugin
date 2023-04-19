@@ -37,7 +37,7 @@ ENV OPENAI_API_KEY=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
 WORKDIR /code
 
 COPY --from=requirements-stage /tmp/requirements.txt /code/requirements.txt
-COPY --from=redis-stage /usr/local/bin/redis* /usr/local/bin/
+COPY --from=redis-stage /usr/bin/redis* /usr/bin/
 COPY --from=redis-stage /data/ /data/
 
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
