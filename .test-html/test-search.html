@@ -101,7 +101,7 @@
 		<h2>分析结果</h2>
 	</div>
 	<script>
-		const url_base = 'localhost';
+		const url_base = 'localhost:8000';
 		const form = document.getElementById('search-form');
 		const resultsDiv = document.getElementById('results');
 		const results2Div = document.getElementById('results2');
@@ -164,7 +164,7 @@
 						}
 					]
 				};
-				response_inner = await fetch('http://'+url_base+':8000/query', {
+				response_inner = await fetch('http://'+url_base+'/query', {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json'
@@ -185,7 +185,7 @@
 				const data = {
 					"search_query": query
 				}
-				response_outer = await fetch('http://'+url_base+':8000/search', {
+				response_outer = await fetch('http://'+url_base+'/search', {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json'
@@ -208,7 +208,7 @@
 					"query_results" :analysis_content_list,
 					"analysis_query":analysisQuery
 				};
-				const analysisResponse = await fetch('http://'+url_base+':8000/analysis', {
+				const analysisResponse = await fetch('http://'+url_base+'/analysis', {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json'
