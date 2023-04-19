@@ -16,7 +16,6 @@ async def get_document_from_file(file: UploadFile) -> Document:
     extracted_text = await extract_text_from_form_file(file)
     metadata = DocumentMetadata(
         source=Source.file,
-        created_at=datetime.datetime.now(),
     )
     doc = Document(text=extracted_text, metadata=metadata)
 

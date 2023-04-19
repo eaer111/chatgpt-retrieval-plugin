@@ -2,7 +2,7 @@ services:
   retrieval-app:
     build:
       context: ../../../
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile_bk
     image: openai/chatgpt-retrieval-plugin
     ports:
       - "80:80"
