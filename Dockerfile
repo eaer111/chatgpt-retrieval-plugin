@@ -16,6 +16,8 @@ VOLUME /data
 
 HEALTHCHECK CMD redis-cli -h localhost -p 6379 ping
 
+RUN ls -la /usr/local/bin/
+
 FROM python:3.10
 
 # # 创建tomcat用户
@@ -35,7 +37,6 @@ ENV OPENAI_API_KEY=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
 WORKDIR /code
 
 COPY --from=requirements-stage /tmp/requirements.txt /code/requirements.txt
-RUN ls -la /usr/local/bin/
 COPY --from=redis-stage /usr/local/bin/redis* /usr/local/bin/
 COPY --from=redis-stage /data/ /data/
 
